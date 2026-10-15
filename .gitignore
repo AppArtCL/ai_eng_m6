@@ -10,7 +10,7 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
-.ipynb
+Pre_entrega_6_Orquestador_Multi_Agente.ipynb
 
 # Herramientas locales / sistema
 .remember/
