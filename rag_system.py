@@ -47,7 +47,7 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_classic.retrievers import EnsembleRetriever
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 class RAGSystem:
     # bm25 y vectorial se pueden inyectar ya construidos (tests offline, comparación de pesos en evaluate.py).
@@ -76,6 +76,7 @@ class RAGSystem:
     
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     rag = RAGSystem()
     consultas = [
         "¿Puedo tener mascota?",

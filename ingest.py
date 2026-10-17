@@ -6,7 +6,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_pinecone import PineconeVectorStore
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 # Determina si una línea es un título.
 def es_titulo(linea: str) -> bool:    
@@ -68,7 +68,7 @@ def cargar_chunks():
 
     chunks = splitter.split_documents(secciones)
     if not chunks:
-        logging.error(f"No se encontraron documentos en {config.DATA_DIR}.")
+        logger.error(f"No se encontraron documentos en {config.DATA_DIR}.")
         raise ValueError(f"No se encontraron documentos en {config.DATA_DIR}.")
     
     contadores = {}
@@ -91,7 +91,7 @@ def esperar_conteo(index, esperado, timeout=30):
         if n >= esperado:
             return n
         time.sleep(2)
-    logging.error(f"Timeout alcanzado. Se esperaban {esperado} vectores, pero solo se contaron {n}.")
+    logger.error(f"Timeout alcanzado. Se esperaban {esperado} vectores, pero solo se contaron {n}.")
     return n
 
 def subir_a_pinecone(chunks):
@@ -106,11 +106,12 @@ def subir_a_pinecone(chunks):
     
     n = esperar_conteo(vectorstore.index, esperado=len(chunks))
     
-    logging.info(f"Vectores en el namespace {config.PINECONE_NAMESPACE}: {n}.")
+    logger.info(f"Vectores en el namespace {config.PINECONE_NAMESPACE}: {n}.")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     chunks = cargar_chunks()
-    logging.info(f"Total de chunks procesados: {len(chunks)}.")
-    logging.info("Metadata de ejemplo: %s", chunks[0].metadata if chunks else {})
+    logger.info(f"Total de chunks procesados: {len(chunks)}.")
+    logger.info("Metadata de ejemplo: %s", chunks[0].metadata if chunks else {})
     subir_a_pinecone(chunks)
