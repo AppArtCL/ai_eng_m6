@@ -42,37 +42,3 @@ def nodo_analista(state: AgentState) -> dict:
         "contribuciones": [{"agente": "analista", "instruccion": instruccion, "aporte": respuesta}],
         "pasos": 1,
     }
-
-
-if __name__ == "__main__":
-    aporte_investigador = (
-        "Los horarios permitidos para mudanzas en el Edificio Riesco 6540 son:\n"
-        "- Lunes a viernes: entre las 07:00 y las 17:30 horas.\n"
-        "- Sábados: entre las 09:00 y las 14:00 horas.\n"
-        "- Domingos y días festivos: está estrictamente prohibida la realización de mudanzas.\n"
-        "Fuente: Protocolo de Mudanzas y Carga en Ascensores, obras_mudanzas.txt."
-    )
-    def estado_de_prueba(contribuciones: list) -> AgentState:
-        return AgentState(
-            messages=[HumanMessage(content="¿Cuántas horas a la semana se permiten mudanzas?")],
-            next_agent="analista",
-            instruccion="Calcula cuántas horas a la semana se permiten mudanzas",
-            razon="prueba",
-            contribuciones=contribuciones,
-            pasos=len(contribuciones),
-            task_completed=False,
-        )
-
-    print("=== Caso 1: con datos del investigador (esperado: 57.5 horas) ===")
-    con_datos = estado_de_prueba([{"agente": "investigador", "instruccion": "Busca los horarios de mudanzas",
-                                   "aporte": aporte_investigador}])
-    print(nodo_analista(con_datos)["contribuciones"][0]["aporte"])
-
-    print("\n=== Caso 2: sin datos (esperado: informa que faltan datos) ===")
-    print(nodo_analista(estado_de_prueba([]))["contribuciones"][0]["aporte"])
-    
-    print("\n=== Verificación: ¿usó la calculadora? ===")
-    mensaje = f"Tarea: Calcula cuántas horas a la semana se permiten mudanzas\n\nDatos disponibles:\n{aporte_investigador}"
-    resultado = agente_analista.invoke({"messages": [HumanMessage(content=mensaje)]})
-    llamadas = [tc["args"] for m in resultado["messages"] for tc in getattr(m, "tool_calls", [])]
-    print("Llamadas a la calculadora:", llamadas or "NINGUNA ❌")

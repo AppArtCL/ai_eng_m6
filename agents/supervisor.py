@@ -106,7 +106,7 @@ def _numeros(texto: str) -> set[str]:
 
 
 def _numeros_inventados(respuesta: str, contexto: str) -> set[str]:
-    """Números de la respuesta que no aparecen en la pregunta ni en los aportes."""
+    """Números de la respuesta que no aparecen en las fuentes permitidas (prompt, pregunta y aportes)."""
     return _numeros(respuesta) - _numeros(contexto)
 
 
@@ -131,8 +131,10 @@ def nodo_sintesis(state: AgentState) -> dict:
     mensajes = [SystemMessage(content=PROMPT_SINTESIS), HumanMessage(content=contexto)]
     respuesta = str(llm_sintesis.invoke(mensajes).content)
 
-    # Validación determinista: cada número de la respuesta debe venir de la pregunta o de un aporte.
-    inventados = _numeros_inventados(respuesta, contexto)
+    # Validación determinista: cada número de la respuesta debe venir del prompt, la pregunta o un aporte
+    # (el prompt aporta, por ejemplo, el número del edificio).
+    fuentes = f"{PROMPT_SINTESIS}\n{contexto}"
+    inventados = _numeros_inventados(respuesta, fuentes)
     if inventados:
         logger.warning("Síntesis con números ajenos a los aportes %s; se pide reescribir.", sorted(inventados))
         mensajes += [
@@ -144,36 +146,9 @@ def nodo_sintesis(state: AgentState) -> dict:
             )),
         ]
         respuesta = str(llm_sintesis.invoke(mensajes).content)
-        inventados = _numeros_inventados(respuesta, contexto)
+        inventados = _numeros_inventados(respuesta, fuentes)
         if inventados:
             logger.warning("El reintento sigue con números ajenos %s; se usa la respuesta de respaldo.", sorted(inventados))
             respuesta = _respuesta_de_respaldo(state)
 
     return {"messages": [AIMessage(content=respuesta, name="supervisor")]}
-
-
-if __name__ == "__main__":
-    def estado_de_prueba(contribuciones: list, pasos: int) -> AgentState:
-        return AgentState(
-            messages=[HumanMessage(content="¿Cuántas horas a la semana se permiten mudanzas?")],
-            next_agent="FINISH",
-            instruccion="",
-            razon="",
-            contribuciones=contribuciones,
-            pasos=pasos,
-            task_completed=True,
-        )
-
-    aportes = [
-        {"agente": "investigador", "instruccion": "Busca los horarios permitidos para mudanzas",
-         "aporte": "Lunes a viernes de 07:00 a 17:30; sábados de 09:00 a 14:00; domingos y festivos prohibido. "
-                   "Fuente: obras_mudanzas.txt, Protocolo de Mudanzas y Carga en Ascensores."},
-        {"agente": "analista", "instruccion": "Calcula las horas semanales permitidas para mudanzas",
-         "aporte": "Lunes a viernes: 17.5 - 7 = 10.5 h/día; sábado: 14 - 9 = 5 h. Total: 10.5 * 5 + 5 = 57.5 horas."},
-    ]
-
-    print("=== Caso normal (esperado: 57.5 horas, con fuente) ===")
-    print(nodo_sintesis(estado_de_prueba(aportes, pasos=2))["messages"][0].content)
-
-    print("\n=== Corte por MAX_PASOS (esperado: advierte respuesta incompleta) ===")
-    print(nodo_sintesis(estado_de_prueba(aportes[:1], pasos=config.MAX_PASOS))["messages"][0].content)

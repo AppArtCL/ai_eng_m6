@@ -3,7 +3,7 @@
 Uso:
     python rag_system.py      # requiere OPENAI_API_KEY y PINECONE_API_KEY en .env
 
-Salida de ejemplo (pesos 0.5/0.5, ejecutada el 2026-10-02; copia en resultados/demo_rag.txt):
+Salida de ejemplo (pesos 0.5/0.5, obtenida en la Pre-entrega 4):
 
     Consulta: ¿Puedo tener mascota?
       1. convivencia_privada-001    | Tenencia y Regulación de Animales Domésticos o Mascotas
